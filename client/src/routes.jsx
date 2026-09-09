@@ -26,17 +26,18 @@ function AppRoutes() {
           <Route path="/" element={<Home />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/rooms" element={<Rooms />} />
-          <Route path="/room" element={<Room />} />
+          <Route path="/room/:id" element={<Room />} />
           <Route path="/login" element={<Login />} />
           <Route path="/about" element={<About />} />
         </Route>
 
         <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<Home />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
             <Route path="/admin/AddRoom" element={<AddRoom />} />
             <Route path="/admin/rooms" element={<AdminRooms />} />
             <Route path="/admin/Map" element={<Map />} />
-            <Route path="/admin/edit" element={<EditRoom />} />
+            <Route path="/admin/edit/:id" element={<EditRoom />} />
         </Route>
 
 

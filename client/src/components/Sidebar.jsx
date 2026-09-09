@@ -11,6 +11,11 @@ function Sidebar() {
           Dashboard
         </NavLink>
         <NavLink
+          to="/admin/rooms"
+          className="rounded-lg px-3 py-2 hover:bg-black hover:text-white">
+          Rooms
+        </NavLink>
+        <NavLink
           to="/admin/AddRoom"
           className="rounded-lg px-3 py-2 hover:bg-black hover:text-white">
           Add Room
@@ -18,7 +23,7 @@ function Sidebar() {
         <NavLink
           to="/admin/rooms"
           className="rounded-lg px-3 py-2 hover:bg-black hover:text-white">
-          Rooms
+          Edit Room
         </NavLink>
         <NavLink
           to="/admin/Map"
