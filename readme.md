@@ -9,9 +9,3 @@ This is my project.
 - Admin dashboard
 
 ### Installation
-
-Run:
-
-```bash
-npm install
-npm run dev

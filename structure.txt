@@ -1,0 +1,117 @@
+Rstate/
+│
+├── client/
+│   │
+│   ├── public/
+│   ├── src/
+│   │   │
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx
+│   │   │   └── Footer.jsx
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── Home.jsx
+│   │   │   ├── Properties.jsx
+│   │   │   ├── PropertyDetails.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   ├── Favorites.jsx
+│   │   │   ├── MyEnquiries.jsx
+│   │   │   │
+│   │   │   └── admin/
+│   │   │       ├── Dashboard.jsx
+│   │   │       ├── Properties.jsx
+│   │   │       ├── AddProperty.jsx
+│   │   │       ├── EditProperty.jsx
+│   │   │       ├── Enquiries.jsx
+│   │   │       └── Analytics.jsx
+│   │   │
+│   │   ├── layouts/
+│   │   │   ├── PublicLayout.jsx
+│   │   │   └── AdminLayout.jsx
+│   │   │
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── hooks/
+│   │   ├── context/
+│   │   ├── utils/
+│   │   │
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   │
+│   ├── package.json
+│   └── vite.config.js
+│
+├── server/              ← We'll create later
+│
+├── .gitignore
+└── README.md
+
+//backend
+server/
+│
+├── config/
+│   ├── db.js
+│   ├── cloudinary.js
+│   └── env.js
+│
+├── controllers/
+│   ├── authController.js
+│   ├── propertyController.js
+│   ├── userController.js
+│   ├── favoriteController.js
+│   ├── enquiryController.js
+│   └── analyticsController.js
+│
+├── middleware/
+│   ├── authMiddleware.js
+│   ├── adminMiddleware.js
+│   ├── errorMiddleware.js
+│   ├── uploadMiddleware.js
+│   └── validateMiddleware.js
+│
+├── models/
+│   ├── User.js
+│   ├── Property.js
+│   ├── Favorite.js
+│   └── Enquiry.js
+│
+├── routes/
+│   ├── authRoutes.js
+│   ├── propertyRoutes.js
+│   ├── userRoutes.js
+│   ├── favoriteRoutes.js
+│   ├── enquiryRoutes.js
+│   └── analyticsRoutes.js
+│
+├── services/
+│   ├── authService.js
+│   ├── propertyService.js
+│   ├── userService.js
+│   ├── favoriteService.js
+│   ├── enquiryService.js
+│   └── analyticsService.js
+│
+├── validators/
+│   ├── authValidator.js
+│   ├── propertyValidator.js
+│   └── enquiryValidator.js
+│
+├── utils/
+│   ├── generateToken.js
+│   ├── ApiError.js
+│   ├── asyncHandler.js
+│   └── apiResponse.js
+│
+├── uploads/
+│   └── .gitkeep
+│
+├── app.js
+├── server.js
+│
+├── .env
+├── .env.example
+├── .gitignore
+├── package.json
+└── package-lock.json
