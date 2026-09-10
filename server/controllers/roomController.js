@@ -1,9 +1,8 @@
 const Room = require("../models/Room");
 
-const getRooms = (req, res) => {
+const getRooms = async (req, res) => {
+    const rooms = await Room.find().sort({ createdAt: -1 });
 
-    const rooms = Room.find();
-    
     res.status(200).json({
         success: true,
         message: "Rooms fetched successfully",
@@ -11,8 +10,9 @@ const getRooms = (req, res) => {
     });
 };
 
-const getRoom = (req, res) => {
-    const room = Room.findById(req.params.id);
+const getRoom = async (req, res) => {
+    const room = await Room.findById(req.params.id);
+
     if (!room) {
         return res.status(404).json({
             success: false,
@@ -26,9 +26,10 @@ const getRoom = (req, res) => {
     });
 };
 
-const createRoom = (req, res) => {
+const createRoom = async (req, res) => {
     const { name, description, capacity, location, price, status } = req.body;
-    const newRoom = new Room({
+
+    const newRoom = await Room.create({
         name,
         description,
         capacity,
@@ -36,6 +37,7 @@ const createRoom = (req, res) => {
         price,
         status: status || "available"
     });
+
     return res.status(201).json({
         success: true,
         message: "Room created successfully",
@@ -43,22 +45,24 @@ const createRoom = (req, res) => {
     });
 };
 
-const updateRoom = (req, res) => {
+const updateRoom = async (req, res) => {
     const { name, description, capacity, location, price, status } = req.body;
-    const room = Room.findById(req.params.id);
+    const updates = Object.fromEntries(
+        Object.entries({ name, description, capacity, location, price, status })
+            .filter(([, value]) => value !== undefined)
+    );
+
+    const room = await Room.findByIdAndUpdate(req.params.id, updates, {
+        new: true,
+        runValidators: true
+    });
+
     if (!room) {
         return res.status(404).json({
             success: false,
             message: "Room not found"
         });
     }
-
-    room.name = name ?? room.name;
-    room.description = description ?? room.description;
-    room.capacity = capacity ?? room.capacity;
-    room.location = location ?? room.location;
-    room.price = price ?? room.price;
-    room.status = status ?? room.status;
 
     return res.status(200).json({
         success: true,
@@ -67,8 +71,8 @@ const updateRoom = (req, res) => {
     });
 };
 
-const deleteRoom = (req, res) => {
-    const room = Room.findById(req.params.id);
+const deleteRoom = async (req, res) => {
+    const room = await Room.findByIdAndDelete(req.params.id);
 
     if (!room) {
         return res.status(404).json({

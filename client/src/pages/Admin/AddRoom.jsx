@@ -4,6 +4,7 @@ import API from "../../api/api";
 
 function AddRoom() {
   const navigate = useNavigate();
+  const [errorMessage, setErrorMessage] = useState("");
   const [roomData, setRoomData] = useState({
     name: "",
     location: "",
@@ -23,6 +24,7 @@ function AddRoom() {
 
   const createRoom = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
 
     try {
       const payload = {
@@ -35,7 +37,6 @@ function AddRoom() {
       };
 
       const response = await API.post("/rooms", payload);
-      console.log(response.data);
 
       setRoomData({
         name: "",
@@ -46,9 +47,15 @@ function AddRoom() {
         status: "available",
       });
 
-      navigate("/admin/rooms");
+      navigate("/admin/rooms", {
+        state: {
+          message: `Room "${response.data.data.name}" created successfully.`,
+        },
+      });
     } catch (error) {
-      console.log(error);
+      setErrorMessage(
+        error.response?.data?.message || "Unable to create the room. Please try again."
+      );
     }
   };
 
@@ -56,7 +63,9 @@ function AddRoom() {
     <div>
       <h1 className="text-3xl font-bold">Create Room</h1>
 
-      <form onSubmit={createRoom}>
+      {errorMessage && <p className="mt-4 text-red-600">{errorMessage}</p>}
+
+      <form onSubmit={createRoom} className="mt-4">
         <input
           type="text"
           name="name"

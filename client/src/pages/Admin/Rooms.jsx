@@ -1,21 +1,39 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import API from "../../api/api";
 
 function AdminRooms() {
+  const location = useLocation();
   const [rooms, setRooms] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const fetchRooms = async () => {
     try {
       const response = await API.get("/rooms");
       setRooms(response.data.data || []);
     } catch (error) {
-      console.log(error);
+      setErrorMessage(error.response?.data?.message || "Unable to load rooms.");
     }
   };
 
   useEffect(() => {
-    fetchRooms();
+    let isCurrent = true;
+
+    API.get("/rooms")
+      .then((response) => {
+        if (isCurrent) {
+          setRooms(response.data.data || []);
+        }
+      })
+      .catch((error) => {
+        if (isCurrent) {
+          setErrorMessage(error.response?.data?.message || "Unable to load rooms.");
+        }
+      });
+
+    return () => {
+      isCurrent = false;
+    };
   }, []);
 
   const handleDelete = async (id) => {
@@ -23,7 +41,7 @@ function AdminRooms() {
       await API.delete(`/rooms/${id}`);
       fetchRooms();
     } catch (error) {
-      console.log(error);
+      setErrorMessage(error.response?.data?.message || "Unable to delete the room.");
     }
   };
 
@@ -31,9 +49,14 @@ function AdminRooms() {
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-6">Rooms</h1>
 
+      {location.state?.message && (
+        <p className="mb-4 text-green-700">{location.state.message}</p>
+      )}
+      {errorMessage && <p className="mb-4 text-red-600">{errorMessage}</p>}
+
       <div className="space-y-4">
         {rooms.map((room) => (
-          <div key={room.id} className="border rounded-lg p-4 flex items-center justify-between gap-4">
+          <div key={room._id} className="border rounded-lg p-4 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold">{room.name}</h2>
               <p>{room.location || "No location"}</p>
@@ -44,7 +67,7 @@ function AdminRooms() {
 
             <div className="flex gap-2">
               <Link
-                to={`/admin/edit/${room.id}`}
+                to={`/admin/edit/${room._id}`}
                 className="bg-black text-white px-4 py-2 rounded"
               >
                 Edit
@@ -52,7 +75,7 @@ function AdminRooms() {
 
               <button
                 type="button"
-                onClick={() => handleDelete(room.id)}
+                onClick={() => handleDelete(room._id)}
                 className="bg-red-600 text-white px-4 py-2 rounded"
               >
                 Delete

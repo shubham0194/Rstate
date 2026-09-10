@@ -32,6 +32,7 @@ The app currently supports:
 - Express
 - CORS
 - Dotenv
+- MongoDB + Mongoose
 
 ## Current app flow
 
@@ -101,7 +102,7 @@ PUT /rooms/:id
 DELETE /rooms/:id
 ```
 
-The current room data is stored in-memory inside the server controller for development/testing. It is not yet connected to a database.
+Room data is stored in MongoDB through Mongoose.
 
 ## Local setup
 
@@ -122,6 +123,8 @@ npm install
 ```
 
 ### 2. Start the backend
+
+Create `server/.env` from `server/.env.example` and set `MONGO_URI` to your MongoDB connection string.
 
 ```bash
 cd server
@@ -174,8 +177,7 @@ The current admin flow allows:
 
 ## Notes
 
-- The project is currently using mock/in-memory room data in the backend.
-- A real database layer can be added later for persistence.
+- The backend must connect to MongoDB before it starts accepting requests.
 - The room routes and frontend route names are set up for a clean CRUD flow and can be expanded further.
 
 ## Next possible improvements
