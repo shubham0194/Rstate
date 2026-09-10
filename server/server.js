@@ -4,11 +4,14 @@ const dotenv = require("dotenv");
 const roomsRouter = require("./routes/roomsRouter");
 const userRouter = require("./routes/userRouter");
 const errorHandler = require("./middleware/errorMiddleware");
+const connectDB = require("./config/db");
 
 
 dotenv.config();
 
 const app = express();
+
+connectDB();
 
 app.use(cors());
 app.use(express.json());
