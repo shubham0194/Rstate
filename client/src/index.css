@@ -1,1 +1,43 @@
 @import "tailwindcss";
+
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #111;
+  background: #fff;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: #fff; }
+a { color: #111; text-decoration: underline; }
+a:hover { color: #555; }
+
+.home-page { max-width: 960px; margin: 0 auto; padding: 0 24px 80px; }
+.home-header { display: flex; justify-content: space-between; align-items: baseline; padding: 24px 0; border-bottom: 1px solid #111; }
+.home-header p { margin: 0; font-size: 22px; font-weight: 700; }
+.home-header span { font-size: 13px; }
+.home-intro { padding: 80px 0; border-bottom: 1px solid #111; }
+.home-intro h1 { max-width: 650px; margin: 0 0 20px; font-size: clamp(2.5rem, 6vw, 5rem); line-height: 1; font-weight: 400; }
+.home-intro p { max-width: 540px; margin: 0 0 24px; font-size: 18px; line-height: 1.5; }
+.home-section { padding: 56px 0; border-bottom: 1px solid #111; }
+.home-section h2 { margin: 0 0 20px; font-size: 25px; font-weight: 400; }
+.home-section > p { max-width: 640px; margin: 0 0 14px; font-size: 16px; line-height: 1.6; }
+.reason-list { max-width: 650px; margin: 0; padding-left: 22px; font-size: 16px; line-height: 2; }
+.section-title-row { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; }
+.section-title-row a { font-size: 14px; }
+.property-list { border-top: 1px solid #111; }
+.property-row { display: flex; justify-content: space-between; gap: 24px; padding: 18px 0; border-bottom: 1px solid #bbb; text-decoration: none; }
+.property-row:hover { background: #f5f5f5; }
+.property-row span { display: flex; flex-direction: column; gap: 6px; }
+.property-row span:last-child { align-items: end; }
+.property-row strong { font-size: 16px; font-weight: 400; }
+.property-row small { color: #555; font-size: 13px; }
+
+@media (max-width: 600px) {
+  .home-page { padding: 0 18px 50px; }
+  .home-header { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .home-intro { padding: 56px 0; }
+  .property-row { gap: 12px; }
+  .property-row strong { font-size: 14px; }
+  .property-row small { font-size: 12px; }
+}
