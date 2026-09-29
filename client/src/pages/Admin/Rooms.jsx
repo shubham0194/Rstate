@@ -13,6 +13,7 @@ const formatLocation = (location) => {
 function AdminRooms() {
   const location = useLocation();
   const [rooms, setRooms] = useState([]);
+  const [selectedRoom, setSelectedRoom] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   const [search, setSearch] = useState("");
@@ -34,7 +35,16 @@ function AdminRooms() {
       if (curSort) params.sort = curSort;
 
       const response = await API.get("/rooms", { params });
-      setRooms(response.data.data || []);
+      const roomList = response.data.data || [];
+      setRooms(roomList);
+
+      // Keep selectedRoom updated if open
+      if (selectedRoom) {
+        const refreshed = roomList.find((r) => r._id === selectedRoom._id);
+        if (refreshed) {
+          setSelectedRoom(refreshed);
+        }
+      }
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Unable to load rooms.");
     }
@@ -60,9 +70,27 @@ function AdminRooms() {
   const handleDelete = async (id) => {
     try {
       await API.delete(`/rooms/${id}`);
+      if (selectedRoom && selectedRoom._id === id) {
+        setSelectedRoom(null);
+      }
       fetchRooms();
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Unable to delete the room.");
+    }
+  };
+
+  const handleToggleStatus = async (e, room) => {
+    e.stopPropagation();
+    const nextStatus = room.status === "rented" ? "available" : "rented";
+    try {
+      const response = await API.put(`/rooms/${room._id}`, { status: nextStatus });
+      const updatedRoom = response.data?.data;
+      if (selectedRoom && selectedRoom._id === room._id && updatedRoom) {
+        setSelectedRoom(updatedRoom);
+      }
+      fetchRooms();
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Unable to update room status.");
     }
   };
 
@@ -105,16 +133,15 @@ function AdminRooms() {
             <option value="">All Statuses</option>
             <option value="available">Available</option>
             <option value="rented">Rented</option>
-            <option value="sold">Sold</option>
           </select>
         </div>
 
         <div className="flex justify-between items-center flex-wrap gap-3">
           <div className="flex gap-2">
-            <button type="submit" className="bg-black text-white px-4 py-2 rounded">
+            <button type="submit" className="bg-black text-white px-4 py-2 rounded cursor-pointer">
               Search / Filter
             </button>
-            <button type="button" onClick={handleReset} className="border px-4 py-2 rounded">
+            <button type="button" onClick={handleReset} className="border px-4 py-2 rounded cursor-pointer">
               Reset
             </button>
           </div>
@@ -139,45 +166,59 @@ function AdminRooms() {
         </div>
       </form>
 
-      <div className="space-y-4">
+      {/* Simplified Rooms List (Only Name and Type + Actions) */}
+      <div className="space-y-3">
+        {rooms.length === 0 && (
+          <p className="text-gray-500 py-4">No rooms found.</p>
+        )}
+
         {rooms.map((room) => (
-          <div key={room._id} className="border rounded-lg p-4 flex items-center justify-between gap-4">
+          <div
+            key={room._id}
+            onClick={() => setSelectedRoom(room)}
+            className="group border border-gray-200 hover:border-black bg-white rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer transition shadow-xs hover:shadow-sm"
+          >
             <div>
-              <h2 className="text-xl font-semibold">{room.name}</h2>
-              {room.images && room.images.length > 0 && (
-                <div style={{ display: "flex", gap: "6px", margin: "8px 0", flexWrap: "wrap" }}>
-                  {room.images.map((img, idx) => (
-                    <img
-                      key={idx}
-                      src={img}
-                      alt={`${room.name} ${idx + 1}`}
-                      style={{ width: "60px", height: "50px", objectFit: "cover", borderRadius: "4px", border: "1px solid #ccc" }}
-                      onError={(e) => { e.target.style.display = "none"; }}
-                    />
-                  ))}
-                </div>
-              )}
-              <p><strong>Description:</strong> {room.description}</p>
-              <p><strong>Location:</strong> {formatLocation(room.location)}</p>
-              <p><strong>Capacity:</strong> {room.capacity}</p>
-              <p><strong>Type:</strong> {room.bhkType || "N/A"}</p>
-              <p><strong>Independent:</strong> {room.isIndependent ? "Yes" : "No"}</p>
-              <p><strong>Price:</strong> ${room.price}</p>
-              <p><strong>Status:</strong> {room.status || "available"}</p>
+              <h2 className="text-lg font-semibold text-gray-900 group-hover:text-black">
+                {room.name}
+              </h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Type: <span className="font-medium text-gray-800">{room.bhkType || "N/A"}</span>
+              </p>
+              <p className="text-xs text-blue-600 mt-1">Click to view details</p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex items-center flex-wrap gap-2">
+              {/* Opposite status button */}
+              <button
+                type="button"
+                onClick={(e) => handleToggleStatus(e, room)}
+                className={`px-3 py-1.5 rounded text-xs font-semibold cursor-pointer border transition ${
+                  room.status === "rented"
+                    ? "border-emerald-500 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                    : "border-amber-500 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                }`}
+              >
+                {room.status === "rented" ? "Mark as Available" : "Mark as Rented"}
+              </button>
+
+              {/* Edit button */}
               <Link
                 to={`/admin/edit/${room._id}`}
-                className="bg-black text-white px-4 py-2 rounded"
+                onClick={(e) => e.stopPropagation()}
+                className="bg-black text-white hover:bg-gray-800 px-3 py-1.5 rounded text-xs font-medium cursor-pointer"
               >
                 Edit
               </Link>
 
+              {/* Delete button */}
               <button
                 type="button"
-                onClick={() => handleDelete(room._id)}
-                className="bg-red-600 text-white px-4 py-2 rounded"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(room._id);
+                }}
+                className="bg-red-600 text-white hover:bg-red-700 px-3 py-1.5 rounded text-xs font-medium cursor-pointer"
               >
                 Delete
               </button>
@@ -185,6 +226,118 @@ function AdminRooms() {
           </div>
         ))}
       </div>
+
+      {/* Room Details Modal */}
+      {selectedRoom && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs"
+          onClick={() => setSelectedRoom(null)}
+        >
+          <div
+            className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b pb-3">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">{selectedRoom.name}</h3>
+                <span
+                  className={`mt-1.5 inline-block rounded px-2 py-0.5 text-xs font-semibold ${
+                    selectedRoom.status === "rented"
+                      ? "bg-amber-100 text-amber-800"
+                      : "bg-emerald-100 text-emerald-800"
+                  }`}
+                >
+                  Status: {selectedRoom.status === "rented" ? "Rented" : "Available"}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedRoom(null)}
+                className="text-gray-400 hover:text-gray-600 text-xl font-bold px-2 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Images */}
+            {selectedRoom.images && selectedRoom.images.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Images</p>
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {selectedRoom.images.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      alt={`${selectedRoom.name} ${idx + 1}`}
+                      className="h-28 w-36 shrink-0 rounded-lg object-cover border border-gray-200"
+                      onError={(e) => { e.target.style.display = "none"; }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Details List */}
+            <div className="mt-4 space-y-2 text-sm text-gray-700">
+              <p>
+                <strong className="text-gray-900">Type:</strong> {selectedRoom.bhkType || "N/A"}
+              </p>
+              <p>
+                <strong className="text-gray-900">Price:</strong> ${selectedRoom.price}
+              </p>
+              <p>
+                <strong className="text-gray-900">Capacity:</strong> {selectedRoom.capacity}
+              </p>
+              <p>
+                <strong className="text-gray-900">Independent:</strong>{" "}
+                {selectedRoom.isIndependent ? "Yes" : "No"}
+              </p>
+              <p>
+                <strong className="text-gray-900">Location:</strong>{" "}
+                {formatLocation(selectedRoom.location)}
+              </p>
+              <div>
+                <strong className="text-gray-900">Description:</strong>
+                <p className="mt-1 text-gray-600 bg-gray-50 p-2.5 rounded border border-gray-100 whitespace-pre-wrap">
+                  {selectedRoom.description || "No description provided."}
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="mt-6 flex justify-between items-center border-t pt-4">
+              <button
+                type="button"
+                onClick={(e) => handleToggleStatus(e, selectedRoom)}
+                className={`px-3 py-1.5 rounded text-xs font-semibold cursor-pointer border ${
+                  selectedRoom.status === "rented"
+                    ? "border-emerald-500 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                    : "border-amber-500 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                }`}
+              >
+                {selectedRoom.status === "rented" ? "Mark as Available" : "Mark as Rented"}
+              </button>
+
+              <div className="flex gap-2">
+                <Link
+                  to={`/admin/edit/${selectedRoom._id}`}
+                  className="bg-black text-white hover:bg-gray-800 px-4 py-1.5 rounded text-xs font-medium"
+                >
+                  Edit Room
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setSelectedRoom(null)}
+                  className="border border-gray-300 text-gray-700 hover:bg-gray-100 px-4 py-1.5 rounded text-xs font-medium cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 
 function Rooms() {
+    const navigate = useNavigate();
 
     const [rooms, setRooms] = useState([]);
-    const [selectedRoom, setSelectedRoom] = useState(null);
 
     const [search, setSearch] = useState("");
     const [bhkType, setBhkType] = useState("");
@@ -13,6 +14,8 @@ function Rooms() {
     const [maxPrice, setMaxPrice] = useState("");
     const [capacity, setCapacity] = useState("");
     const [sort, setSort] = useState("newest");
+    const [favoriteMessage, setFavoriteMessage] = useState("");
+    const [favoriteRoomIds, setFavoriteRoomIds] = useState([]);
 
     const fetchRooms = async (overrideParams) => {
         try {
@@ -40,9 +43,27 @@ function Rooms() {
         }
     };
 
+    const fetchFavorites = async () => {
+        if (!localStorage.getItem("token")) {
+            return;
+        }
+        try {
+            const response = await API.get("/favorites");
+            const favs = response.data.data || [];
+            const ids = favs.map((f) => String(f.room?._id || f.room)).filter(Boolean);
+            setFavoriteRoomIds(ids);
+        } catch (error) {
+            console.log("Failed to fetch favorites:", error);
+        }
+    };
+
     useEffect(() => {
         fetchRooms();
     }, [sort]);
+
+    useEffect(() => {
+        fetchFavorites();
+    }, []);
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -64,21 +85,58 @@ function Rooms() {
             minPrice: "",
             maxPrice: "",
             capacity: "",
-            sort: "newest" 
+            sort: "newest" 
         });
     };
+    
 
-    const openModal = (room) => {
-        setSelectedRoom(room);
+    const handleAddFavorite = async (e, roomId) => {
+        e.stopPropagation();
+
+        const idStr = String(roomId);
+        if (favoriteRoomIds.includes(idStr)) {
+            return;
+        }
+
+        if (!localStorage.getItem("token")) {
+            setFavoriteMessage("Please log in to add a room to your favorites.");
+            return;
+        }
+
+        try {
+            const response = await API.post(`/favorites/${roomId}`);
+            setFavoriteRoomIds((currentIds) => [...currentIds, idStr]);
+            setFavoriteMessage(response.data.message || "Room added to your favorites.");
+        } catch (error) {
+            setFavoriteMessage(error.response?.data?.message || "Unable to add room to your favorites.");
+        }
     };
 
-    const closeModal = () => {
-        setSelectedRoom(null);
+    const handleRemoveFavorite = async (e, roomId) => {
+        e.stopPropagation();
+
+        if (!localStorage.getItem("token")) {
+            setFavoriteMessage("Please log in to manage your favorites.");
+            return;
+        }
+
+        const idStr = String(roomId);
+
+        try {
+            const response = await API.delete(`/favorites/${roomId}`);
+            setFavoriteRoomIds((currentIds) => currentIds.filter((id) => id !== idStr));
+            setFavoriteMessage(response.data.message || "Room removed from favorites.");
+        } catch (error) {
+            setFavoriteMessage(error.response?.data?.message || "Unable to remove room from favorites.");
+        }
     };
 
     return (
         <div style={{ padding: '20px' }}>
             <h1>Available Rooms</h1>
+            {favoriteMessage && (
+                <p style={{ color: 'green', marginTop: '10px' }}>{favoriteMessage}</p>
+            )}
 
             {/* Filter, Search, and Sort Controls */}
             <form onSubmit={handleSearchSubmit} style={{ border: '1px solid #ccc', padding: '15px', marginTop: '15px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -105,7 +163,6 @@ function Rooms() {
                         <option value="">All Statuses</option>
                         <option value="available">Available</option>
                         <option value="rented">Rented</option>
-                        <option value="sold">Sold</option>
                     </select>
 
                     <input
@@ -160,7 +217,7 @@ function Rooms() {
                     <div 
                         key={room._id}
                         style={{ border: '1px solid #ccc', padding: '15px', cursor: 'pointer', borderRadius: '5px' }}
-                        onClick={() => openModal(room)}
+                        onClick={() => navigate(`/room/${room._id}`)}
                     >
                         {room.images && room.images.length > 0 && (
                             <img
@@ -173,52 +230,41 @@ function Rooms() {
                         <h2>{room.name}</h2>
                         <p>Price: ${room.price}</p>
                         <p>Type: {room.bhkType || "N/A"}</p>
+                        <p style={{ margin: '6px 0' }}>
+                            <strong>Status:</strong>{" "}
+                            <span style={{
+                                display: 'inline-block',
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                fontWeight: 600,
+                                backgroundColor: room.status === 'rented' ? '#fef3c7' : '#d1fae5',
+                                color: room.status === 'rented' ? '#92400e' : '#065f46'
+                            }}>
+                                {room.status === 'rented' ? 'Rented' : 'Available'}
+                            </span>
+                        </p>
+                        {favoriteRoomIds.includes(String(room._id)) ? (
+                            <button
+                                type="button"
+                                onClick={(e) => handleRemoveFavorite(e, room._id)}
+                                style={{ padding: '8px 12px', cursor: 'pointer' }}
+                            >
+                                Remove Favorite
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={(e) => handleAddFavorite(e, room._id)}
+                                style={{ padding: '8px 12px', cursor: 'pointer' }}
+                            >
+                                Add to Favorites
+                            </button>
+                        )}
                         <p style={{ color: 'blue', fontSize: '14px', marginTop: '10px' }}>Click to view details</p>
                     </div>
                 ))}
             </div>
-
-            {selectedRoom && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', zIndex: 1000
-                }}>
-                    <div style={{
-                        background: 'white', padding: '20px', borderRadius: '5px',
-                        maxWidth: '500px', width: '90%', maxHeight: '85vh', overflowY: 'auto'
-                    }}>
-                        <h2 style={{ marginBottom: '10px' }}>{selectedRoom.name}</h2>
-                        {selectedRoom.images && selectedRoom.images.length > 0 && (
-                            <div style={{ marginBottom: '15px' }}>
-                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                    {selectedRoom.images.map((img, idx) => (
-                                        <img
-                                            key={idx}
-                                            src={img}
-                                            alt={`${selectedRoom.name} ${idx + 1}`}
-                                            style={{ width: '100px', height: '80px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #ddd' }}
-                                            onError={(e) => { e.target.style.display = 'none'; }}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        <p><strong>Description:</strong> {selectedRoom.description}</p>
-                        <p><strong>Capacity:</strong> {selectedRoom.capacity}</p>
-                        <p><strong>Price:</strong> ${selectedRoom.price}</p>
-                        <p><strong>Type:</strong> {selectedRoom.bhkType || "N/A"}</p>
-                        <p><strong>Independent:</strong> {selectedRoom.isIndependent ? "Yes" : "No"}</p>
-                        <p><strong>Status:</strong> {selectedRoom.status || "available"}</p>
-                        
-                        {/* Notice location is excluded as requested */}
-
-                        <button onClick={closeModal} style={{ marginTop: '20px', padding: '8px 16px', cursor: 'pointer' }}>
-                            Close
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

@@ -32,6 +32,14 @@ const roomSchema = new mongoose.Schema({
             type: String,
             required: true,
             trim: true
+        },
+        latitude: {
+            type: Number,
+            required: false
+        },
+        longitude: {
+            type: Number,
+            required: false
         }
     },
 
@@ -59,7 +67,7 @@ const roomSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ["available", "rented", "sold"],
+        enum: ["available", "rented"],
         default: "available"
     }
 });

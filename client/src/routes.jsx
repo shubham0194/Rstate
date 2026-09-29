@@ -42,9 +42,7 @@ function AppRoutes() {
             {/* ================= NORMAL USER ================= */}
 
               <Route element={<ProtectedRoute />}>
-                  <Route element={<PublicLayout />}>
                       <Route path="/favorites" element={<Favorites />} />
-                  </Route>
               </Route>
             </Route>
 

@@ -215,10 +215,36 @@ const deleteRoom = async (req, res) => {
 
 };
 
+const getRoomStats = async (req, res, next) => {
+    try {
+        const total = await Room.countDocuments();
+
+        const available = await Room.countDocuments({
+            status: "available",
+        });
+
+        const rented = await Room.countDocuments({
+            status: "rented",
+        });
+
+        res.status(200).json({
+            success: true,
+            data: {
+                total,
+                available,
+                rented,
+            },
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getRooms,
     getRoom,
     createRoom,
     updateRoom,
-    deleteRoom
+    deleteRoom,
+    getRoomStats
 };
